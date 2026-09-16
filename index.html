@@ -95,6 +95,8 @@
   .speak-btn svg{width:16px;height:16px;}
   .modal-note{font-size:0.85rem;color:var(--ink-soft);border-top:1px solid var(--stone-line);padding-top:16px;margin:0;}
   .cursive-modal-img{height:58px;display:block;}
+  .trace-this-btn{display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 16px;font-size:0.82rem;font-weight:600;background:var(--ink);color:var(--cream);}
+  .trace-this-btn svg{width:15px;height:15px;}
 
   /* ---------- flashcards ---------- */
   .fc-wrap{display:flex;flex-direction:column;align-items:center;}
@@ -133,12 +135,36 @@
   .quiz-done .score{font-weight:700;font-size:2.4rem;margin-bottom:24px;}
   .restart-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:0.9rem;font-weight:600;background:var(--ink);color:var(--cream);}
   .restart-btn svg{width:16px;height:16px;}
+
+  /* ---------- draw ---------- */
+  .draw-wrap{display:flex;flex-direction:column;align-items:center;}
+  .draw-status{width:100%;max-width:380px;display:flex;align-items:center;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:16px;}
+  .draw-stop{font-size:0.78rem;font-weight:600;color:var(--brick);text-decoration:underline;}
+  .draw-board{position:relative;width:100%;max-width:380px;aspect-ratio:1/1;border:1px solid var(--stone-line);background:var(--cream);overflow:hidden;touch-action:none;}
+  .draw-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+  .draw-guide img{height:58%;opacity:0.25;}
+  .draw-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;}
+  .draw-actions{display:flex;gap:10px;margin-top:16px;}
+  .draw-clear-btn{padding:10px 22px;font-size:0.9rem;font-weight:600;border:1px solid var(--stone-line);color:var(--ink);}
+  .draw-hint{font-size:0.78rem;color:var(--ink-soft);margin-top:14px;text-align:center;max-width:380px;}
+
+  /* ---------- flag badge ---------- */
+  .flag-badge{position:absolute;top:20px;right:20px;width:42px;height:28px;border-radius:3px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.4);z-index:2;}
+  @media(min-width:640px){.flag-badge{top:24px;right:36px;width:48px;height:32px;}}
+  .flag-badge svg{display:block;width:100%;height:100%;}
 </style>
 </head>
 <body>
 
 <header>
   <div class="hero-texture" id="heroTexture" aria-hidden="true"></div>
+  <div class="flag-badge" aria-label="Flag of Armenia" title="Flag of Armenia">
+    <svg viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <rect width="3" height="0.6667" y="0" fill="#D90012"/>
+      <rect width="3" height="0.6667" y="0.6667" fill="#0033A0"/>
+      <rect width="3" height="0.6667" y="1.3334" fill="#F2A800"/>
+    </svg>
+  </div>
   <div class="hero-content">
     <div class="hero-title arm">Հայոց Այբուբեն</div>
     <p class="hero-sub">The Armenian alphabet — 39 letters devised by Mesrop Mashtots in 405 AD, still unchanged in shape sixteen centuries on.</p>
@@ -158,11 +184,15 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
     Quiz
   </button>
+  <button class="tab" data-mode="draw">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    Draw
+  </button>
 </nav>
 
 <main id="main"></main>
 
-<footer>Pronunciation shown here follows Eastern Armenian. Western Armenian voices several consonants differently. Audio is pre-rendered from a real Armenian speech engine and embedded directly in this file, so it sounds the same everywhere and doesn't depend on voices installed on your device — though it's synthetic speech, not a human recording, so intonation can sound a little mechanical. Cursive letterforms are cropped from a handwritten reference chart rather than redrawn, matched to each letter by its position in standard alphabetical order.</footer>
+<footer>Pronunciation shown here follows Eastern Armenian. Western Armenian voices several consonants differently. Audio is pre-rendered from a real Armenian speech engine and embedded directly in this file, so it sounds the same everywhere and doesn't depend on voices installed on your device — though it's synthetic speech, not a human recording, so intonation can sound a little mechanical.</footer>
 
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" id="modalBox"></div>
@@ -231,7 +261,8 @@ const ICONS = {
   shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
   x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-  restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>'
+  restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
 };
 
 // Real Armenian audio, pre-rendered offline and embedded as base64 MP3 —
@@ -273,6 +304,7 @@ document.querySelectorAll(".tab").forEach(btn=>{
     document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     mode = btn.dataset.mode;
+    if(mode === "draw") drawGuideLetter = null;
     render();
   });
 });
@@ -280,6 +312,7 @@ document.querySelectorAll(".tab").forEach(btn=>{
 function render(){
   if(mode === "browse") renderBrowse();
   else if(mode === "flashcards") renderFlashcards();
+  else if(mode === "draw") renderDraw();
   else renderQuiz();
 }
 
@@ -309,6 +342,7 @@ function openModal(item){
       <div>
         <div class="modal-label">Cursive</div>
         <img class="cursive-modal-img" src="data:image/png;base64,${CURSIVE_DATA[item.n]}" alt="cursive handwritten form of ${item.name}">
+        <button class="trace-this-btn" id="traceThisBtn">${ICONS.pencil} Trace this letter</button>
       </div>
       <div>
         <div class="modal-label">Letter sound</div>
@@ -335,6 +369,15 @@ function openModal(item){
   modalBox.querySelector(".modal-close").addEventListener("click", closeModal);
   modalBox.querySelector("#speakLetter").addEventListener("click", ()=>playClip("letters", item.n));
   modalBox.querySelector("#speakWord").addEventListener("click", ()=>playClip("words", item.n));
+  modalBox.querySelector("#traceThisBtn").addEventListener("click", ()=>{
+    drawGuideLetter = item;
+    mode = "draw";
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    const drawTabBtn = document.querySelector('.tab[data-mode="draw"]');
+    if(drawTabBtn) drawTabBtn.classList.add("active");
+    closeModal();
+    render();
+  });
   modalBackdrop.classList.add("open");
 }
 function closeModal(){ modalBackdrop.classList.remove("open"); }
@@ -525,6 +568,105 @@ function pickAnswer(n, q){
     else{ quizIdx++; quizPicked = null; }
     renderQuiz();
   });
+}
+
+// ---------------------------------------------------------------------
+// Draw view — free drawing only, no detection.
+// Reached plainly via the nav tab (blank canvas), or via a letter's
+// "Trace this letter" button in the browse detail modal, which pre-loads
+// that letter's real cursive reference image as a faint guide to copy.
+// ---------------------------------------------------------------------
+let drawGuideLetter = null;   // set when entered via a letter's "Trace" button
+let drawCtx = null;
+
+function renderDraw(){
+  const guide = drawGuideLetter;
+  main.innerHTML = `
+    <div class="draw-wrap">
+      ${guide ? `
+        <div class="draw-status">
+          <span>Tracing ${guide.name} (${guide.upper}${guide.lower})</span>
+          <button class="draw-stop" id="drawStopTrace">Stop tracing</button>
+        </div>
+      ` : ""}
+      <div class="draw-board" id="drawBoard">
+        ${guide ? `
+          <div class="draw-guide">
+            <img src="data:image/png;base64,${CURSIVE_DATA[guide.n]}" alt="cursive guide for ${guide.name}">
+          </div>
+        ` : ""}
+        <canvas class="draw-canvas" id="drawCanvas"></canvas>
+      </div>
+      <div class="draw-actions">
+        <button class="draw-clear-btn" id="drawClear">Clear</button>
+      </div>
+      ${guide ? `<p class="draw-hint">Trace over the faint guide, or draw freely below it.</p>` : ""}
+    </div>
+  `;
+
+  setupDrawCanvas();
+  document.getElementById("drawClear").addEventListener("click", clearDrawCanvas);
+  const stopBtn = document.getElementById("drawStopTrace");
+  if(stopBtn) stopBtn.addEventListener("click", ()=>{
+    const item = drawGuideLetter;
+    drawGuideLetter = null;
+    mode = "browse";
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    const browseTabBtn = document.querySelector('.tab[data-mode="browse"]');
+    if(browseTabBtn) browseTabBtn.classList.add("active");
+    render();
+    if(item) openModal(item);
+  });
+}
+
+function setupDrawCanvas(){
+  const canvas = document.getElementById("drawCanvas");
+  const board = document.getElementById("drawBoard");
+  const dpr = window.devicePixelRatio || 1;
+  const rect = board.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(4, rect.width * 0.035);
+  ctx.strokeStyle = "#211B15";
+  drawCtx = ctx;
+
+  let drawing = false;
+
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function down(e){
+    e.preventDefault();
+    drawing = true;
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    canvas.setPointerCapture(e.pointerId);
+  }
+  function move(e){
+    if(!drawing) return;
+    e.preventDefault();
+    const p = pos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+  function up(){ drawing = false; }
+
+  canvas.addEventListener("pointerdown", down);
+  canvas.addEventListener("pointermove", move);
+  canvas.addEventListener("pointerup", up);
+  canvas.addEventListener("pointerleave", up);
+  canvas.addEventListener("pointercancel", up);
+}
+
+function clearDrawCanvas(){
+  const canvas = document.getElementById("drawCanvas");
+  if(drawCtx && canvas) drawCtx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 // ---------------------------------------------------------------------
