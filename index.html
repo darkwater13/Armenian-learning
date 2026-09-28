@@ -45,6 +45,19 @@
   .tab.active{color:var(--cream);background:var(--ink);border-bottom:2px solid var(--ink);}
   .tab svg{width:16px;height:16px;flex-shrink:0;}
 
+  /* Below ~480px, five labelled tabs don't fit one row without scrolling.
+     Drop to icon-only (with a text label for screen readers/hover) so all
+     tabs stay visible and reachable in a single tap. */
+  @media(max-width:480px){
+    nav{overflow-x:visible;}
+    .tab{flex:1 1 0;justify-content:center;padding:14px 4px;gap:0;}
+    .tab span.tab-label{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
+    .tab svg{width:20px;height:20px;}
+  }
+
   main{padding:32px 24px 40px;}
   @media(min-width:640px){main{padding:40px 40px 48px;}}
 
@@ -184,25 +197,25 @@
 </header>
 
 <nav>
-  <button class="tab active" data-mode="browse">
+  <button class="tab active" data-mode="browse" title="Browse">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-    Browse
+    <span class="tab-label">Browse</span>
   </button>
-  <button class="tab" data-mode="flashcards">
+  <button class="tab" data-mode="flashcards" title="Flashcards">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 8 12 14 22 8 12 2"/><polyline points="2 14 12 20 22 14"/></svg>
-    Flashcards
+    <span class="tab-label">Flashcards</span>
   </button>
-  <button class="tab" data-mode="quiz">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
-    Quiz
-  </button>
-  <button class="tab" data-mode="draw">
+  <button class="tab" data-mode="draw" title="Draw">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-    Draw
+    <span class="tab-label">Draw</span>
   </button>
-  <button class="tab" data-mode="vocab">
+  <button class="tab" data-mode="vocab" title="Vocabulary">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg>
-    Vocabulary
+    <span class="tab-label">Vocabulary</span>
+  </button>
+  <button class="tab" data-mode="quiz" title="Quiz">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+    <span class="tab-label">Quiz</span>
   </button>
 </nav>
 
