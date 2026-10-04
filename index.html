@@ -125,11 +125,27 @@
 
   /* ---------- flashcards ---------- */
   .fc-wrap{display:flex;flex-direction:column;align-items:center;}
+  .fc-selection{width:100%;max-width:760px;margin:0 0 28px;border:1px solid var(--stone-line);}
+  .fc-selection summary{padding:12px 16px;font-size:0.85rem;font-weight:700;cursor:pointer;list-style-position:inside;}
+  .fc-selection summary:hover{background:var(--cream);}
+  .fc-selection-fields{margin:0;padding:0 16px 16px;border:0;}
+  .fc-selection-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .fc-selection-action{padding:6px 12px;font-size:0.8rem;font-weight:600;border:1px solid var(--stone-line);}
+  .fc-selection-action:hover{background:var(--ink);color:var(--cream);}
+  .fc-letter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  @media(min-width:480px){.fc-letter-grid{grid-template-columns:repeat(6,1fr);}}
+  @media(min-width:768px){.fc-letter-grid{grid-template-columns:repeat(8,1fr);}}
+  .fc-letter-option{display:flex;align-items:center;gap:4px;padding:5px 4px;font-size:0.78rem;cursor:pointer;}
+  .fc-letter-option .arm{font-size:1.15rem;}
+  .fc-empty{width:100%;max-width:380px;padding:48px 24px;border:1px solid var(--stone-line);background:var(--cream);text-align:center;}
+  .fc-empty p{margin:0 0 18px;color:var(--ink-soft);font-size:0.9rem;}
+  .fc-empty button{padding:10px 18px;background:var(--ink);color:var(--cream);font-size:0.9rem;font-weight:600;}
   .fc-status{width:100%;max-width:380px;display:flex;justify-content:space-between;font-size:0.85rem;color:var(--ink-soft);margin-bottom:16px;}
   .fc-card{width:100%;max-width:380px;aspect-ratio:4/5;display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:16px;border:1px solid var(--stone-line);background:var(--cream);text-align:center;cursor:pointer;}
   .fc-card.flipped{background:var(--slate);color:var(--cream);}
   .fc-card .arm{font-size:5.5rem;}
+  .fc-cursive{height:72px;max-width:80%;object-fit:contain;display:block;}
   .fc-hint{font-size:0.75rem;color:var(--ink-soft);}
   .fc-back-name{font-weight:700;font-size:1.6rem;margin-bottom:6px;}
   .fc-back-sound{font-size:0.9rem;opacity:0.9;margin-bottom:16px;}
@@ -177,6 +193,8 @@
   .flag-badge{position:absolute;top:20px;right:20px;width:42px;height:28px;border-radius:3px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.4);z-index:2;}
   @media(min-width:640px){.flag-badge{top:24px;right:36px;width:48px;height:32px;}}
   .flag-badge svg{display:block;width:100%;height:100%;}
+  .app-version{position:absolute;right:20px;bottom:10px;color:#A99F92;font-size:0.68rem;letter-spacing:0.06em;}
+  @media(min-width:640px){.app-version{right:40px;bottom:12px;}}
 </style>
 </head>
 <body>
@@ -194,6 +212,7 @@
     <div class="hero-title arm">Հայոց Այբուբեն</div>
     <p class="hero-sub">The Armenian alphabet — 39 letters devised by Mesrop Mashtots in 405 AD, still unchanged in shape sixteen centuries on.</p>
   </div>
+  <div class="app-version" aria-label="Application version 12">v12</div>
 </header>
 
 <nav>
@@ -504,6 +523,8 @@ function renderBrowse(){
 // ---------------------------------------------------------------------
 // Flashcards view
 // ---------------------------------------------------------------------
+let fcSelected = new Set(LETTERS.map(item=>item.n));
+let fcDraftSelected = new Set(fcSelected);
 let fcOrder = shuffleArr(LETTERS);
 let fcIdx = 0;
 let fcFlipped = false;
@@ -511,7 +532,33 @@ let fcKnown = new Set();
 
 function renderFlashcards(){
   const item = fcOrder[fcIdx];
+  fcDraftSelected = new Set(fcSelected);
   main.innerHTML = `
+    <details class="fc-selection">
+      <summary>Choose flashcards (${fcSelected.size} of ${LETTERS.length} selected)</summary>
+      <fieldset class="fc-selection-fields">
+      <div class="fc-selection-actions">
+        <button type="button" class="fc-selection-action" id="fcSelectAll">Select all</button>
+        <button type="button" class="fc-selection-action" id="fcSelectNone">Clear selection</button>
+      </div>
+      <div class="fc-letter-grid">
+        ${LETTERS.map(letter=>`
+          <label class="fc-letter-option">
+            <input type="checkbox" data-fc-letter="${letter.n}" ${fcSelected.has(letter.n)?"checked":""}>
+            <span class="arm">${letter.upper}${letter.lower}</span>
+            <span>${letter.name}</span>
+          </label>
+        `).join("")}
+      </div>
+      <button type="button" class="fc-selection-action" id="fcApplySelection">OK</button>
+      </fieldset>
+    </details>
+    ${fcSelected.size === 0 ? `
+      <div class="fc-empty">
+        <p>Select at least one letter to start a flashcard round.</p>
+        <button type="button" id="fcSelectAllEmpty">Select all letters</button>
+      </div>
+    ` : `
     <div class="fc-wrap">
       <div class="fc-status">
         <span>${fcIdx+1} / ${fcOrder.length}</span>
@@ -520,6 +567,7 @@ function renderFlashcards(){
       <div class="fc-card ${fcFlipped?"flipped":""}" id="fcCard" role="button" tabindex="0">
         ${!fcFlipped ? `
           <span class="arm">${item.upper}${item.lower}</span>
+          <img class="fc-cursive" src="data:image/png;base64,${CURSIVE_DATA[item.n]}" alt="cursive handwritten form of ${item.name}">
           <span class="fc-hint">tap to reveal</span>
         ` : `
           <div>
@@ -539,7 +587,24 @@ function renderFlashcards(){
         <button class="icon-btn" id="fcNext" aria-label="Next">${ICONS.right}</button>
       </div>
     </div>
+    `}
   `;
+
+  main.querySelector("#fcSelectAll").addEventListener("click", ()=>updateFlashcardDraft(LETTERS));
+  main.querySelector("#fcSelectNone").addEventListener("click", ()=>updateFlashcardDraft([]));
+  main.querySelectorAll("[data-fc-letter]").forEach(input=>{
+    input.addEventListener("change", ()=>{
+      fcDraftSelected = new Set([...main.querySelectorAll("[data-fc-letter]")]
+        .filter(checkbox=>checkbox.checked)
+        .map(checkbox=>Number(checkbox.dataset.fcLetter)));
+    });
+  });
+  main.querySelector("#fcApplySelection").addEventListener("click", ()=>{
+    setFlashcardSelection(LETTERS.filter(letter=>fcDraftSelected.has(letter.n)));
+  });
+  const emptySelectAll = main.querySelector("#fcSelectAllEmpty");
+  if(emptySelectAll) emptySelectAll.addEventListener("click", ()=>setFlashcardSelection(LETTERS));
+  if(!item) return;
 
   document.getElementById("fcCard").addEventListener("click", ()=>{ fcFlipped=!fcFlipped; renderFlashcards(); });
   document.getElementById("fcCard").addEventListener("keydown", (e)=>{
@@ -552,8 +617,22 @@ function renderFlashcards(){
   if(speakLetterBtn) speakLetterBtn.addEventListener("click", (e)=>{ e.stopPropagation(); playClip("letters", item.n); });
   document.getElementById("fcKnow").addEventListener("click", ()=>{ fcKnown.add(item.n); fcGo(1); });
   document.getElementById("fcShuffle").addEventListener("click", ()=>{
-    fcOrder = shuffleArr(LETTERS); fcIdx = 0; fcFlipped = false; renderFlashcards();
+    fcOrder = shuffleArr(LETTERS.filter(letter=>fcSelected.has(letter.n))); fcIdx = 0; fcFlipped = false; renderFlashcards();
   });
+}
+function updateFlashcardDraft(items){
+  fcDraftSelected = new Set(items.map(item=>item.n));
+  main.querySelectorAll("[data-fc-letter]").forEach(input=>{
+    input.checked = fcDraftSelected.has(Number(input.dataset.fcLetter));
+  });
+}
+function setFlashcardSelection(items){
+  fcSelected = new Set(items.map(item=>item.n));
+  fcOrder = shuffleArr(items);
+  fcIdx = 0;
+  fcFlipped = false;
+  fcKnown = new Set();
+  renderFlashcards();
 }
 function fcGo(delta){
   fcFlipped = false;
